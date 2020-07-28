@@ -24,10 +24,14 @@ var svg = d3.select("#sg1")
           "translate(" + margin.left + "," + margin.top + ")");
 
 // Parse the Data
-d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/app_yr_clg.csv", function(data) {
+d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/adm_yr_clg.csv", function(data) {
 
   // List of groups = header of the csv files
   var keys = data.columns.slice(1)
+
+  // Row sums
+  var yearSum = +data.keys[1] + +data.keys[2]
+  console.log(+data.Year);
 
   // Add X axis
   var x = d3.scaleLinear()
@@ -39,8 +43,11 @@ d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/da
 
   // Add Y axis
   var y = d3.scaleLinear()
-    .domain([-50000, 50000])
+    .domain(d3.extent([-50000, 40000, 2004, 50000]))
     .range([ height, 0 ]);
+
+
+  console.log(d3.extent(data, function(d) { return d.Chemistry; }))
 
   // color palette
   var color = d3.scaleOrdinal()

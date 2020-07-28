@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
+<link rel="stylesheet" href="https://use.typekit.net/mfo3lll.css">
 <script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 
 <div id="sg1"></div>
 <script>
@@ -24,14 +24,14 @@ var svg = d3.select("#sg1")
           "translate(" + margin.left + "," + margin.top + ")");
 
 // Parse the Data
-d3.csv("app_yr_clg.csv", function(data) {
+d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/app_yr_clg.csv", function(data) {
 
   // List of groups = header of the csv files
   var keys = data.columns.slice(1)
 
   // Add X axis
   var x = d3.scaleLinear()
-    .domain(d3.extent(data, function(d) { return d.year; }))
+    .domain(d3.extent(data, function(d) { return d.Year; }))
     .range([ 0, width ]);
   svg.append("g")
     .attr("transform", "translate(0," + height + ")")
@@ -39,21 +39,25 @@ d3.csv("app_yr_clg.csv", function(data) {
 
   // Add Y axis
   var y = d3.scaleLinear()
-    .domain([-100000, 100000])
+    .domain([-50000, 50000])
     .range([ height, 0 ]);
-  svg.append("g")
-    .call(d3.axisLeft(y));
 
   // color palette
   var color = d3.scaleOrdinal()
     .domain(keys)
-    .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
+    .range(['#AD6A6C','#095c4d','#D0ADA7','#93B7BE','#44355B'])
 
   //stack the data?
   var stackedData = d3.stack()
     .offset(d3.stackOffsetSilhouette)
     .keys(keys)
     (data)
+
+  // create areas
+  var areas = d3.area()
+        .x(function(d, i) { return x(d.data.Year); })
+        .y0(function(d) { return y(d[0]); })
+        .y1(function(d) { return y(d[1]); })
 
   // Show the areas
   svg
@@ -62,11 +66,7 @@ d3.csv("app_yr_clg.csv", function(data) {
     .enter()
     .append("path")
       .style("fill", function(d) { return color(d.key); })
-      .attr("d", d3.area()
-        .x(function(d, i) { return x(d.data.year); })
-        .y0(function(d) { return y(d[0]); })
-        .y1(function(d) { return y(d[1]); })
-    )
+      .attr("d", areas)
 
 })
 </script>

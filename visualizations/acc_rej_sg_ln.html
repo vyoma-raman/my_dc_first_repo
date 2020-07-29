@@ -23,6 +23,10 @@ var margin = {top: 155, right: pageWidth / 4, bottom: 30, left: pageWidth / 4},
     width = pageWidth - margin.left - margin.right,
     height = 555 - margin.top - margin.bottom;
 
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // append the svg object to the body of the page
 var svg = d3.select("#sg2")
   .append("svg")
@@ -32,26 +36,34 @@ var svg = d3.select("#sg2")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-changeStream();
-
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function changeStream() {
+  svg.selectAll("*").remove();
+  addHeading();
+  addData();
 }
 
 function addHeading() {
-  heads.innerHTML = "hi";
+  noun = ""
+  switch(selStatus.value) {
+    case "all":
+      noun = "All Students";
+      break;
+    case "fr":
+      noun = "Freshmen";
+      break;
+    case "tr":
+      noun = "Transfer Students";
+      break;
+  }
+  heads.innerHTML = "Acceptances, Rejections, and Acceptance Rates for " + noun;
 }
 
 function addData() {
-  svg.selectAll("*").remove();
 // Parse the Data
   d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/acc_rej_" + selStatus.value + ".csv", function(data) {
 
     // List of groups = header of the csv files
     var keys = data.columns.slice(1)
-
-    // Strings corresponding to keys - fix
-    var keyDict = {}
 
     // Add X axis
     var x = d3.scaleLinear()
@@ -71,12 +83,10 @@ function addData() {
       .domain([-scale, scale])
       .range([ height, 0 ]);
 
-    var colorRange = ['#44355B','#93B7BE','#AD6A6C','#095c4d','#006C67']
-
     // color palette
     var color = d3.scaleOrdinal()
       .domain(keys)
-      .range(colorRange.slice(0,keys.length))
+      .range(['#93B7BE','#44355B'])
 
     //stack the data?
     var stackedData = d3.stack()
@@ -92,7 +102,12 @@ function addData() {
           .curve(d3.curveBasis);
 
     // create tooltip
-    var tooltip = d3.select("body").append("div")
+    var tooltip1 = d3.select("body").append("div")
+      .attr("class", "tooltip");
+
+
+    // create tooltip
+    var tooltip2 = d3.select("body").append("div")
       .attr("class", "tooltip");
 
     // Show the areas
@@ -106,13 +121,13 @@ function addData() {
       .on("mouseover", function(d, i) {
         d3.select(this)
           .style("opacity", 0.7)
-        tooltip.transition()
-          .style("opacity", 0.7)
+        tooltip1.transition()
+          .style("opacity", 1)
       })
       .on("mouseout", function(d) {
         d3.select(this)
           .style("opacity", 1)
-        tooltip.transition()
+        tooltip1.transition()
           .style("opacity", 0)
       })
       .on("mousemove", function(d, i, j) {
@@ -130,17 +145,72 @@ function addData() {
             noun = "transfer students";
             break;
         }
-        tooltip.html("<strong>" + year + "-" + (year + 1) + "</strong><br>" + numberWithCommas(d[year - 1996]['data'][keys[i]]) + " " + noun + " were " + keys[i].toLowerCase() + ".")
+        tooltip1.html("<strong>" + year + "-" + (year + 1) + "</strong><br>" + numberWithCommas(d[year - 1996]['data'][keys[i]]) + " " + noun + " were " + keys[i].toLowerCase() + ".")
           .style("left", ((x_coord <= (pageWidth / 4 + 125)) ? (pageWidth / 4) : ((x_coord >= (pageWidth * 3 / 4 - 125)) ? (pageWidth * 3 / 4 - 250) : (x_coord - 125))) + "px")
           .style("top", (margin.top - 55) + "px")
+
+      })
+
+      svg
+        .append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#AD6A6C")
+        .attr("stroke-width", 3)
+        .attr("d", d3.line()
+          .x(function(d) { return x(d.Year) })
+          .y(function(d) { return y(d.AcceptanceRate * scale / 20 - scale) })
+        )
+
+      svg.selectAll("myCircles")
+      .data(data)
+      .enter()
+      .append("circle")
+        .attr("fill", "#8d4e50")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.Year) })
+        .attr("cy", function(d) { return y(d.AcceptanceRate * scale / 20 - scale) })
+        .attr("r", 3.5)
+      .on("mouseover", function(d, i) {
+        d3.select(this)
+          .attr("r", 4.7)
+          .style("opacity", 0.5)
+      })
+      .on("mouseout", function(d) {
+        d3.select(this)
+          .attr("r", 3.5)
+          .style("opacity", 1)
+        tooltip2.transition()
+          .style("opacity", 0)
+      })
+      .on("click", function(d, i, j) {
+        tooltip2.transition()
+          .style("opacity", 0.6)
+        let year = Math.floor(x.invert(d3.mouse(this)[0]));
+        let y_coord = d3.event.pageY;
+        let noun = "";
+        switch(selStatus.value) {
+          case "all":
+            noun = "all students";
+            break;
+          case "fr":
+            noun = "freshmen";
+            break;
+          case "tr":
+            noun = "transfer students";
+            break;
+        }
+        tooltip2.html("<strong>" + year + "-" + (year + 1) + "</strong><br>" + "Acceptance rate for<br>" + noun + ": " + d.AcceptanceRate + "%")
+          .style("left", (d3.event.pageX - 75) + "px")
+          .style("top", (d3.event.pageY - 75) + "px")
+          .style("width", "auto")
+          .style("background-color", "black")
+          .style("color", "white")
 
       })
   })
 }
 
-function changeStream() {
-  addHeading();
-  addData();
-}
+changeStream();
 
 </script>

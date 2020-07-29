@@ -7,9 +7,14 @@
 <div id="sg1">
   <h3 id="heads"></h3>
   <div>
-    <select id="selViz" onchange="changeStream()">
+    <select class="sel" id="selType" onchange="changeStream()">
       <option value = "pp">Applicants</option>
       <option value = "dm">Admitted Students</option>
+    </select>
+    <select class="sel" id="selStatus" onchange="changeStream()">
+      <option value = "all">All Students</option>
+      <option value = "fr">New Freshmen</option>
+      <option value = "tr">Transfer Students</option>
     </select>
   </div>
 </div>
@@ -38,23 +43,46 @@ function numberWithCommas(x) {
 }
 
 function addHeading() {
-  if (selViz.value === "pp") {
-    heads.innerHTML = "Number of Student Applicants Per Year, by College";
+  let phrase = "";
+  if (selType.value === "pp") {
+    switch(selStatus.value) {
+      case "all":
+        phrase = "Student Applicants";
+        break;
+      case "fr":
+        phrase = "Freshman Applicants";
+        break;
+      case "tr":
+        phrase = "Transfer Applicants";
+        break;
+    }
   } else {
-    heads.innerHTML = "Number of Admitted Students Per Year, by College"
+    switch(selStatus.value) {
+      case "all":
+        phrase = "Admitted Students";
+        break;
+      case "fr":
+        phrase = "Admitted Freshman";
+        break;
+      case "tr":
+        phrase = "Admitted Transfer Students";
+        break;
+    }
   }
+
+  heads.innerHTML = "Number of " + phrase + " Per Academic Year, by College";
 }
 
 function addData() {
   svg.selectAll("*").remove();
 // Parse the Data
-  d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/a" + selViz.value + "_yr_clg.csv", function(data) {
+  d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/a" + selType.value + "_" + selStatus.value + "_clg.csv", function(data) {
 
     // List of groups = header of the csv files
     var keys = data.columns.slice(1)
 
     // Strings corresponding to keys
-    var keyDict = {"Chemistry": "Chemistry", "Engineering": "Engineering", "EnvironmentalDesign": "Environmental Design", "NaturalResources": "Natural Resources", "LettersScience": "Letters and Sciences"}
+    var keyDict = {"Chemistry": "College of Chemistry", "Engineering": "College of Engineering", "EnvironmentalDesign": "College of Environmental Design", "NaturalResources": "College of Natural Resources", "LettersScience": "College of Letters and Sciences", "Haas": "Haas School of Business", "Optometry": "School of Optometry"}
 
     // Add X axis
     var x = d3.scaleLinear()
@@ -69,16 +97,17 @@ function addData() {
         }));
 
     // Add Y axis
-    var scale = d3.max(data, function(d) { return d3.sum([d.Chemistry, d.Engineering, 
-      d.NaturalResources, d.LettersScience, d.EnvironmentalDesign]); }) / 2 + 500
+    var scale = d3.max(data, function(d) { return d3.sum([d.Chemistry, d.Engineering, d.NaturalResources, d.LettersScience, d.EnvironmentalDesign, d.Haas, d.Optometry]); }) / 2 + 500
     var y = d3.scaleLinear()
       .domain([-scale, scale])
       .range([ height, 0 ]);
 
+    var colorRange = ['#44355B','#abc1ff','#575A4B','#AD6A6C','#095c4d','#93B7BE','#006C67']
+
     // color palette
     var color = d3.scaleOrdinal()
       .domain(keys)
-      .range(['#44355B','#abc1ff','#095c4d','#AD6A6C','#93B7BE'])
+      .range(colorRange.slice(0,keys.length))
 
     //stack the data?
     var stackedData = d3.stack()
@@ -119,11 +148,36 @@ function addData() {
       })
       .on("mousemove", function(d, i, j) {
         let year = Math.floor(x.invert(d3.mouse(this)[0]));
-        let verb = (selViz.value === "pp") ? "received" : "admitted";
-        let end = (selViz.value === "pp") ? "applicants." : "students.";
+        let verb = (selType.value === "pp") ? "received" : "admitted";
+        // applicants; freshman applicants; transfer applicants // students; freshmen; transfer students
+        let end = "";
+        if (selType.value === "pp") {
+          switch(selStatus.value){
+            case "all":
+              end = "applicants.";
+              break;
+            case "fr":
+              end = "freshman applicants.";
+              break;
+            case "tr":
+              end = "transfer applicants";
+              break;
+          }
+        } else {
+          switch(selStatus.value) {
+            case "all":
+              end = "students.";
+              break;
+            case "fr":
+              end = "freshmen.";
+              break;
+            case "tr":
+              end = "transfer students";
+              break;
+          }
+        }
         let x_coord = d3.event.pageX;
-        tooltip.html("<strong>" + year + "-" + (year + 1) + "</strong><br>The College of " + keyDict[keys[i]] + " " + verb + " " + numberWithCommas(d[year - 1996]['data'][keys[i]]) + " " + end)
-        // if mouse x is 3/4 - 125px, it's 3/4
+        tooltip.html("<strong>" + year + "-" + (year + 1) + "</strong><br>The " + keyDict[keys[i]] + " " + verb + " " + numberWithCommas(d[year - 1996]['data'][keys[i]]) + " " + end)
           .style("left", ((x_coord <= (pageWidth / 4 + 125)) ? (pageWidth / 4) : ((x_coord >= (pageWidth * 3 / 4 - 125)) ? (pageWidth * 3 / 4 - 250) : (x_coord - 125))) + "px")
           .style("top", (margin.top - 55) + "px")
 

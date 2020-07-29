@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="../styles.css">
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<div id="sg1">
+  <h3 id="heads"></h3>
+  <div>
+    <select id="selViz" onchange="changeStream()">
+      <option value = "pp">Applicants</option>
+      <option value = "dm">Admitted Students</option>
+    </select>
+  </div>
+</div>
+<script>
+
+// set the dimensions and margins of the graph
+let pageWidth = window.innerWidth;
+
+var margin = {top: 155, right: pageWidth / 4, bottom: 30, left: pageWidth / 4},
+    width = pageWidth - margin.left - margin.right,
+    height = 555 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#sg1")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+changeStream();
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function addHeading() {
+  if (selViz.value === "pp") {
+    heads.innerHTML = "Number of Student Applicants Per Year, by College";
+  } else {
+    heads.innerHTML = "Number of Admitted Students Per Year, by College"
+  }
+}
+
+function addData() {
+  svg.selectAll("*").remove();
+// Parse the Data
+  d3.csv("https://raw.githubusercontent.com/vyoma-raman/my_dc_first_repo/master/data/a" + selViz.value + "_yr_clg.csv", function(data) {
+
+    // List of groups = header of the csv files
+    var keys = data.columns.slice(1)
+
+    // Strings corresponding to keys
+    var keyDict = {"Chemistry": "Chemistry", "Engineering": "Engineering", "EnvironmentalDesign": "Environmental Design", "NaturalResources": "Natural Resources", "LettersScience": "Letters and Sciences"}
+
+    // Add X axis
+    var x = d3.scaleLinear()
+      .domain(d3.extent(data, function(d) { return d.Year; }))
+      .range([ 0, width ]);
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x)
+        .tickValues([1998, 2003, 2008, 2013, 2018])
+        .tickFormat(function(d, i) {
+          return d + "-" + (d + 1);
+        }));
+
+    // Add Y axis
+    var scale = d3.max(data, function(d) { return d3.sum([d.Chemistry, d.Engineering, 
+      d.NaturalResources, d.LettersScience, d.EnvironmentalDesign]); }) / 2 + 500
+    var y = d3.scaleLinear()
+      .domain([-scale, scale])
+      .range([ height, 0 ]);
+
+    // color palette
+    var color = d3.scaleOrdinal()
+      .domain(keys)
+      .range(['#44355B','#abc1ff','#095c4d','#AD6A6C','#93B7BE'])
+
+    //stack the data?
+    var stackedData = d3.stack()
+      .offset(d3.stackOffsetSilhouette)
+      .keys(keys)
+      (data)
+
+    // create areas
+    var areas = d3.area()
+          .x(function(d, i) { return x(d.data.Year); })
+          .y0(function(d) { return y(d[0]); })
+          .y1(function(d) { return y(d[1]); })
+          .curve(d3.curveBasis);
+
+    // create tooltip
+    var tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip");
+
+    // Show the areas
+    svg
+      .selectAll("mylayers")
+      .data(stackedData)
+      .enter()
+      .append("path")
+        .style("fill", function(d) { return color(d.key); })
+        .attr("d", areas)
+      .on("mouseover", function(d, i) {
+        d3.select(this)
+          .style("opacity", 0.7)
+        tooltip.transition()
+          .style("opacity", 0.7)
+      })
+      .on("mouseout", function(d) {
+        d3.select(this)
+          .style("opacity", 1)
+        tooltip.transition()
+          .style("opacity", 0)
+      })
+      .on("mousemove", function(d, i, j) {
+        let year = Math.floor(x.invert(d3.mouse(this)[0]));
+        let verb = (selViz.value === "pp") ? "received" : "admitted";
+        let end = (selViz.value === "pp") ? "applicants." : "students.";
+        let x_coord = d3.event.pageX;
+        tooltip.html("<strong>" + year + "-" + (year + 1) + "</strong><br>The College of " + keyDict[keys[i]] + " " + verb + " " + numberWithCommas(d[year - 1996]['data'][keys[i]]) + " " + end)
+        // if mouse x is 3/4 - 125px, it's 3/4
+          .style("left", ((x_coord <= (pageWidth / 4 + 125)) ? (pageWidth / 4) : ((x_coord >= (pageWidth * 3 / 4 - 125)) ? (pageWidth * 3 / 4 - 250) : (x_coord - 125))) + "px")
+          .style("top", (margin.top - 55) + "px")
+
+      })
+  })
+}
+
+function changeStream() {
+  addHeading();
+  addData();
+}
+
+</script>

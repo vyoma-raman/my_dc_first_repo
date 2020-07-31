@@ -86,7 +86,7 @@ function addData() {
     // color palette
     var color = d3.scaleOrdinal()
       .domain(keys)
-      .range(['#93B7BE','#44355B'])
+      .range(['#5A3B48','#93B7BE'])
 
     //stack the data?
     var stackedData = d3.stack()
@@ -155,7 +155,7 @@ function addData() {
         .append("path")
         .datum(data)
         .attr("fill", "none")
-        .attr("stroke", "#AD6A6C")
+        .attr("stroke", "#FFCAB1")
         .attr("stroke-width", 3)
         .attr("d", d3.line()
           .x(function(d) { return x(d.Year) })
@@ -166,7 +166,7 @@ function addData() {
       .data(data)
       .enter()
       .append("circle")
-        .attr("fill", "#8d4e50")
+        .attr("fill", "#ffb998")
         .attr("stroke", "none")
         .attr("cx", function(d) { return x(d.Year) })
         .attr("cy", function(d) { return y(d.AcceptanceRate * scale / 20 - scale) })
@@ -204,7 +204,7 @@ function addData() {
           .style("left", (d3.event.pageX - 75) + "px")
           .style("top", (d3.event.pageY - 75) + "px")
           .style("width", "auto")
-          .style("background-color", "black")
+          .style("background-color", "#1F1F1F")
           .style("color", "white")
 
       })

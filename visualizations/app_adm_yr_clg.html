@@ -7,14 +7,14 @@
 <div id="sg1">
   <h3 id="heads"></h3>
   <div>
-    <select class="sel" id="selType" onchange="changeStream()">
-      <option value = "pp">Applicants</option>
-      <option value = "dm">Admitted Students</option>
-    </select>
     <select class="sel" id="selStatus" onchange="changeStream()">
       <option value = "all">All Students</option>
       <option value = "fr">New Freshmen</option>
       <option value = "tr">Transfer Students</option>
+    </select>
+    <select class="sel" id="selType" onchange="changeStream()">
+      <option value = "pp">Applicants</option>
+      <option value = "dm">Admitted Students</option>
     </select>
   </div>
 </div>
@@ -102,12 +102,13 @@ function addData() {
       .domain([-scale, scale])
       .range([ height, 0 ]);
 
-    var colorRange = ['#44355B','#abc1ff','#575A4B','#AD6A6C','#095c4d','#93B7BE','#006C67']
+    var colorRange1 = ['#5A3B48','#FFCAB1','#095c4d','#575A4B','#93B7BE','#AD6A6C','#C8E4D3'],
+      colorRange2 = ['#5A3B48','#FFCAB1','#095c4d','#93B7BE','#AD6A6C'];
 
     // color palette
     var color = d3.scaleOrdinal()
       .domain(keys)
-      .range(colorRange.slice(0,keys.length))
+      .range(keys.length == 7 ? colorRange1 : colorRange2)
 
     //stack the data?
     var stackedData = d3.stack()

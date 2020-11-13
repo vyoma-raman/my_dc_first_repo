@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Admitted Demographics</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+    </head>
+    <body>
+    <svg width="600" height="400"> </svg>
+    <script>
+        let data1 = [29780, 198, 17150, 4455, 15743, 292, 3006, 17443];
+
+        let svg1 = d3.select("svg"),
+            width = svg1.attr("width"),
+            height = svg1.attr("height"),
+            radius = Math.min(width, height) / 2,
+            g1 = svg1.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        let color = d3.scaleOrdinal(['#5A3B48','#FFCAB1','#095c4d','#575A4B','#93B7BE','#AD6A6C','#C8E4D3', '#000080']);
+
+        // Generate the pie
+        let pie = d3.pie();
+
+        // Generate the arcs
+        let arc = d3.arc()
+                    .innerRadius(radius * 0.5)
+                    .outerRadius(radius);
+
+        //Generate groups
+        let arcs = g1.selectAll("arc")
+                    .data(pie(data1))
+                    .enter()
+                    .append("g")
+                    .attr("class", "arc")
+
+        //Draw arc paths
+        arcs.append("path")
+            .attr("fill", function(d, i) {
+                return color(i);
+            })
+            .attr("d", arc);
+    </script>
+    <div id="select-div" class="sel"></div>
+    <div id="chart"></div>
+    <script src="../data/pie_data.js"></script> 
+    <script src="pie_js.js"></script>
+    </body>
+</html>

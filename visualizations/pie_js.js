@@ -32,7 +32,7 @@ const g2 = svg2
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-const tooltip2 = d3.select("body").append("div")
+const tooltip2 = d3.select("#chart").append("div")
   .attr("class", "tooltip");
 
 update()
@@ -66,17 +66,17 @@ function update(d, i) {
           .style("opacity", 0.7)
         tooltip2.transition()
           .style("opacity", 1)
+        tooltip2.html("<strong>Hello</strong>") // keyDict[keys[i]]
+          .style("left", (d3.event.pageX + 10) + "px")
+          .style("top", (d3.event.pageY - 15) + "px")
+          .style("background-color", "#FF0000")
+          .style("color", "#FF0000")
+        console.log(keyDict[keys[i]])
       })
-      .on("mouseout", function(d) {
-        d3.select(this)
-          .style("opacity", 1)
-        tooltip2.transition()
-          .style("opacity", 0)
+    .on("mouseout", function(d) {
+      d3.select(this)
+        .style("opacity", 1)
+      tooltip2.transition()
+        .style("opacity", 0)
       })
-      tooltip2.html("Hello " + keyDict[keys[i]])
-        .style("left", "1000px")
-        .style("top", "300px")
-        .style("width", "auto")
-        .style("background-color", "#FF0000")
-        .style("color", "white")
 };

@@ -1,8 +1,5 @@
-const margin = { top: 200, bottom: 10, left: 300, right: 10 }
-const gap = 6;
-
 let keys = Object.keys(data["1996-97"])
-let keyDict = {"Asian": "Asian", "White": "White", "International": "International", "Chicano_Latino": "Chicanx/Latinx", "African_American": "African American", "Decline_to_State": "Unknown", "Native_American_Alaska_Native": "Native American/Alaska Native", "Pacific_Islander": "Pacific Islander"}
+let keyDict = {"Asian": "Asian", "White": "White", "International": "International", "Chicano_Latino": "Chicanx Latinx", "African_American": "African American", "Decline_to_State": "Unknown", "Native_American_Alaska_Native": "Native American Alaska Native", "Pacific_Islander": "Pacific Islander"}
 
 let selectedCategory = "2019-20"
 
@@ -30,7 +27,7 @@ const svg2 = d3
 .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-const tooltip2 = d3.select("#chart").append("div")
+const tooltip2 = d3.select("#tooltip").append("div")
   .attr("class", "tooltip");
 
 update()
@@ -56,8 +53,8 @@ function update(d, i) {
           tooltip2.transition()
               .style("opacity", 1)
           tooltip2.html("<strong>"+ keyDict[keys[i]] + "</strong><br>" + Math.round(data2[keys[i]] / total(data2) * 10000) / 100 + "%")
-              .style("left", (d3.event.pageX + 10) + "px")
-              .style("top", (d3.event.pageY - 15) + "px")
+              .style("left", (3 * width / 2 + margin1 - 75) + "px")
+              .style("top", (height / 2 + 18) + "px")
         })
       .on("mouseout", function(d) {
           d3.select(this)

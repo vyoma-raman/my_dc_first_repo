@@ -2,42 +2,78 @@
 <html>
     <head>
         <title>Admitted Demographics</title>
+        <link rel="stylesheet" href="../styles.css">
         <script src="https://d3js.org/d3.v4.js"></script>
     </head>
     <body>
-    <svg width="600" height="400"> </svg>
+        <div id="two_divs">
+            <div id="my_dataviz1"></div>
+            <div id="my_dataviz2"></div>
+        </div>
     <script>
-        let data1 = [29780, 198, 17150, 4455, 15743, 292, 3006, 17443];
-
-        let svg1 = d3.select("svg"),
-            width = svg1.attr("width"),
-            height = svg1.attr("height"),
-            radius = Math.min(width, height) / 2,
-            g1 = svg1.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        let color = d3.scaleOrdinal(['#5A3B48','#FFCAB1','#095c4d','#575A4B','#93B7BE','#AD6A6C','#C8E4D3', '#000080']);
-
-        // Generate the pie
-        let pie = d3.pie();
-
-        // Generate the arcs
-        let arc = d3.arc()
-                    .innerRadius(radius * 0.5)
-                    .outerRadius(radius);
-
-        //Generate groups
-        let arcs = g1.selectAll("arc")
-                    .data(pie(data1))
-                    .enter()
-                    .append("g")
-                    .attr("class", "arc")
-
-        //Draw arc paths
-        arcs.append("path")
-            .attr("fill", function(d, i) {
-                return color(i);
+        let data1 = {"Asian": 29780, "White": 17443, "International": 17150, "Chicano_Latino": 15743, "African_American": 4455, "Decline_to_State": 3006, "Native_American_Alaska_Native": 292, "Pacific_Islander": 198};
+        function total(dict_to_sum) {
+            let values = Object.keys(dict_to_sum).map(function(key){
+                return dict_to_sum[key];
             })
-            .attr("d", arc);
+            let sum = values.reduce((a,b) => a + b, 0)
+            return sum
+        }
+        let color = d3.scaleOrdinal(['#5A3B48','#FFCAB1','#095c4d','#000080','#93B7BE','#AD6A6C','#C8E4D3','#575A4B']);
+
+        // set the dimensions and margins of the graph
+        var width = 450
+            height = 450
+            margin = 40
+
+        // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+        var radius = Math.min(width, height) / 2 - margin
+
+        // append the svg object to the div called 'my_dataviz'
+        var svg = d3.select("#my_dataviz1")
+            .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+            .append("g")
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        const tooltip1 = d3.select("#chart").append("div")
+            .attr("class", "tooltip");
+
+        // Compute the position of each group on the pie:
+        var pie = d3.pie()
+            .value(function(d) {return d.value; })
+        var pied_data = pie(d3.entries(data1))
+
+        // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+        svg
+            .selectAll('all')
+            .data(pied_data)
+            .enter()
+            .append('path')
+            .attr('d', d3.arc()
+                .innerRadius(radius * 0.5)
+                .outerRadius(radius)
+           )
+            .attr('fill', function(d){ return(color(d.data.key)) })
+            .attr("stroke", "black")
+            .style("stroke-width", "1px")
+            .on("mouseover", function(d, i) {
+                d3.select(this)
+                    .style("opacity", 0.7)
+                tooltip2.transition()
+                    .style("opacity", 1)
+                tooltip2.html("<strong>"+ keyDict[keys[i]] + "</strong><br>" + Math.round(data1[keys[i]] / total(data1) * 10000) / 100 + "%")
+                    .style("left", (d3.event.pageX + 10) + "px")
+                    .style("top", (d3.event.pageY - 15) + "px")
+              })
+            .on("mouseout", function(d) {
+                d3.select(this)
+                    .style("opacity", 1)
+                tooltip2.transition()
+                    .style("opacity", 0)
+                })
+        </script>
     </script>
     <div id="select-div" class="sel"></div>
     <div id="chart"></div>
